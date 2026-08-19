@@ -140,6 +140,19 @@
     text-align:center;
     line-height:1.5;
   }
+  .app-hint{
+    background:#fff4ec;
+    border:1px solid #ffd4b8;
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:0.88rem;
+    color:#8a4a1f;
+    margin-bottom:22px;
+    line-height:1.5;
+  }
+  .app-hint strong{
+    color:#7a3b12;
+  }
   .hidden{display:none !important;}
   .dice{
     font-size:2.2rem;
@@ -179,6 +192,7 @@
       <span class="step-badge">Passo 2 de 3</span>
       <h2 id="scenario-title" class="scenario-title"></h2>
       <div class="scenario-text" id="scenario-text"></div>
+      <div class="app-hint">No app, na pergunta "Qual tipo de trauma ocorreu?", escolha: <strong id="scenario-app-option"></strong></div>
       <p class="desc">Leia a situação com atenção e, em seguida, abra o aplicativo para simular o atendimento conforme o caso sorteado. Ele abrirá em uma nova aba — não feche esta página.</p>
       <button class="btn-primary" id="btn-open-app">Abrir aplicativo SOS Dente</button>
       <button class="btn-ghost" id="btn-manual-advance">Já terminei a simulação no app →</button>
@@ -210,21 +224,25 @@
     {
       id: 1,
       title: "Cenário 1 — Avulsão de dente permanente após atividade esportiva",
+      appOption: "O dente saiu inteiro",
       text: "\"Meu filho João, de 10 anos, estava jogando futebol na escola durante a aula de educação física. Em uma disputa pela bola, ele caiu para frente e bateu a boca no chão. Quando fui buscá-lo, percebi que um dos dentes da frente havia saído completamente da boca. O dente foi encontrado no gramado e está em minhas mãos. João está assustado, mas consciente e sem outros ferimentos aparentes. Não sei o que fazer nem qual a melhor forma de transportar o dente até o atendimento.\""
     },
     {
       id: 2,
       title: "Cenário 2 — Fratura coronária decorrente de acidente em ambiente escolar",
+      appOption: "O dente quebrou",
       text: "\"Minha filha Mariana, de 8 anos, estava correndo no recreio da escola quando tropeçou e bateu a boca em um banco de concreto. A professora me ligou informando que um dos dentes da frente quebrou após a queda. Quando cheguei à escola, observei que uma parte do dente havia se soltado e que Mariana sentia desconforto ao falar e ao encostar os dentes. O pedaço do dente foi encontrado pelos funcionários da escola.\""
     },
     {
       id: 3,
       title: "Cenário 3 — Traumatismo em dente decíduo após queda durante brincadeira",
+      appOption: "Está mole ou deslocado",
       text: "\"Meu filho Lucas, de 3 anos, estava brincando no parque quando escorregou e caiu com o rosto no chão. Após a queda, percebi que um dos dentinhos da frente parecia estar torto e mais para dentro da gengiva do que o normal. Ele chorou bastante no momento do acidente, mas agora está mais calmo. Estou preocupada porque ainda são dentes de leite e não sei se devo procurar atendimento imediatamente.\""
     },
     {
       id: 4,
       title: "Cenário 4 — Sangramento gengival associado a impacto na região bucal",
+      appOption: "Sangramento na gengiva/lábios",
       text: "\"Minha filha Sofia, de 6 anos, estava andando de bicicleta no quintal de casa quando perdeu o equilíbrio e bateu a boca no guidão. Os dentes parecem estar inteiros, mas a gengiva começou a sangrar logo após o acidente. O sangramento diminuiu depois de alguns minutos, porém a região continua inchada e sensível ao toque. Gostaria de saber quais cuidados devo tomar e se há necessidade de procurar atendimento odontológico.\""
     }
   ];
@@ -278,6 +296,7 @@
     if(!scenario){ showStep("idle"); return; }
     document.getElementById("scenario-title").textContent = scenario.title;
     document.getElementById("scenario-text").textContent = scenario.text;
+    document.getElementById("scenario-app-option").textContent = "\"" + scenario.appOption + "\"";
   }
 
   document.getElementById("btn-sortear").addEventListener("click", function(){
