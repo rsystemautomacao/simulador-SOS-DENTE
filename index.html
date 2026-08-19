@@ -327,13 +327,25 @@
     }
   });
 
-  // Restore state on load (e.g. accidental refresh mid-test).
-  (function init(){
-    var savedStep = sessionStorage.getItem(SS_STEP) || "idle";
-    if(savedStep === "result"){
-      renderResult();
+  // Warn before an actual page reload/close mid-test, since it restarts
+  // the flow from scratch. Browsers show their own generic confirmation
+  // text here (they've ignored custom beforeunload messages since ~2011
+  // to prevent abuse), but the prompt itself still appears.
+  window.addEventListener("beforeunload", function(e){
+    var currentStep = sessionStorage.getItem(SS_STEP) || "idle";
+    if(currentStep !== "idle"){
+      e.preventDefault();
+      e.returnValue = "";
     }
-    showStep(savedStep);
+  });
+
+  // Always start fresh on load — a reload should visibly return to the
+  // beginning, not silently keep whatever step the previous load was on.
+  (function init(){
+    sessionStorage.removeItem(SS_STEP);
+    sessionStorage.removeItem(SS_SCENARIO);
+    sessionStorage.removeItem(SS_APP_OPENED);
+    showStep("idle");
   })();
 
 })();
