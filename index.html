@@ -193,7 +193,7 @@
       <h2 id="scenario-title" class="scenario-title"></h2>
       <div class="scenario-text" id="scenario-text"></div>
       <div class="app-hint">No app, na pergunta "Qual tipo de trauma ocorreu?", escolha: <strong id="scenario-app-option"></strong></div>
-      <p class="desc">Leia a situação com atenção e, em seguida, abra o aplicativo para simular o atendimento conforme o caso sorteado. Ele abrirá em uma nova aba — não feche esta página.</p>
+      <p class="desc">Leia a situação com atenção e, em seguida, abra o aplicativo para simular o atendimento conforme o caso sorteado. Ele abrirá em uma nova aba — não feche esta página. Pode voltar aqui pra reler o cenário quantas vezes precisar; só avance quando terminar.</p>
       <button class="btn-primary" id="btn-open-app">Abrir aplicativo SOS Dente</button>
       <button class="btn-ghost" id="btn-manual-advance">Já terminei a simulação no app →</button>
     </div>
@@ -209,7 +209,7 @@
 
   </div>
 
-  <p class="sr-note">Ao voltar para esta aba após usar o aplicativo, o próximo passo aparece automaticamente.</p>
+  <p class="sr-note">Pode ir e voltar entre esta aba e o aplicativo quantas vezes precisar — o cenário fica visível até você clicar em avançar.</p>
   <footer>Simulador de cenários &middot; SOS Dente</footer>
 </div>
 
@@ -249,7 +249,6 @@
 
   var SS_STEP = "sosdente_step";
   var SS_SCENARIO = "sosdente_scenario_id";
-  var SS_APP_OPENED = "sosdente_app_opened";
 
   // Asks the shared /api/draw endpoint for a scenario id, weighted toward
   // whichever scenario has been drawn least across every device so far
@@ -306,7 +305,6 @@
     btn.textContent = "Sorteando...";
     drawScenarioId().then(function(id){
       sessionStorage.setItem(SS_SCENARIO, String(id));
-      sessionStorage.setItem(SS_APP_OPENED, "false");
       renderResult();
       showStep("result");
     }).finally(function(){
@@ -316,10 +314,12 @@
   });
 
   document.getElementById("btn-open-app").addEventListener("click", function(){
-    sessionStorage.setItem(SS_APP_OPENED, "true");
     window.open(APP_URL, "_blank", "noopener");
   });
 
+  // The only way to move on to the form step — deliberately not automatic,
+  // so the participant can switch back to re-read the scenario as many
+  // times as needed while using the app without losing it.
   document.getElementById("btn-manual-advance").addEventListener("click", function(){
     showStep("form");
   });
@@ -330,20 +330,7 @@
 
   document.getElementById("btn-reset").addEventListener("click", function(){
     sessionStorage.removeItem(SS_SCENARIO);
-    sessionStorage.removeItem(SS_APP_OPENED);
     showStep("idle");
-  });
-
-  // Auto-advance to the form step when the user comes back to this tab
-  // after having opened the app in a new one.
-  document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "visible"){
-      var currentStep = sessionStorage.getItem(SS_STEP);
-      var appOpened = sessionStorage.getItem(SS_APP_OPENED) === "true";
-      if(currentStep === "result" && appOpened){
-        showStep("form");
-      }
-    }
   });
 
   // Warn before an actual page reload/close mid-test, since it restarts
@@ -363,7 +350,6 @@
   (function init(){
     sessionStorage.removeItem(SS_STEP);
     sessionStorage.removeItem(SS_SCENARIO);
-    sessionStorage.removeItem(SS_APP_OPENED);
     showStep("idle");
   })();
 
