@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador SOS Dente</title>
+<style>
+  :root{
+    --primary:#0f7a8c;
+    --primary-dark:#0a5a68;
+    --accent:#ff8a5c;
+    --bg:#f2f7f8;
+    --card:#ffffff;
+    --text:#1b2a2f;
+    --muted:#5c7278;
+    --border:#dbe7e9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--bg),#e7f1f2);
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+  }
+  .wrap{
+    width:100%;
+    max-width:560px;
+  }
+  .logo{
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .logo .tooth{
+    font-size:40px;
+    line-height:1;
+  }
+  .logo h1{
+    font-size:1.4rem;
+    margin:8px 0 2px;
+    color:var(--primary-dark);
+  }
+  .logo p{
+    margin:0;
+    color:var(--muted);
+    font-size:0.9rem;
+  }
+  .card{
+    background:var(--card);
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(15,122,140,0.12);
+    padding:28px 24px;
+    border:1px solid var(--border);
+  }
+  .step-badge{
+    display:inline-block;
+    background:var(--primary);
+    color:#fff;
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:.04em;
+    padding:4px 10px;
+    border-radius:999px;
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  h2{
+    margin:0 0 10px;
+    font-size:1.15rem;
+    color:var(--primary-dark);
+  }
+  p.desc{
+    color:var(--muted);
+    line-height:1.5;
+    margin:0 0 22px;
+    font-size:0.95rem;
+  }
+  .scenario-title{
+    font-weight:700;
+    color:var(--primary-dark);
+    margin:0 0 10px;
+    font-size:1rem;
+  }
+  .scenario-text{
+    background:var(--bg);
+    border-left:4px solid var(--primary);
+    border-radius:10px;
+    padding:16px 18px;
+    font-size:0.95rem;
+    line-height:1.6;
+    color:var(--text);
+    margin-bottom:22px;
+    white-space:pre-line;
+  }
+  button, a.btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    border:none;
+    border-radius:12px;
+    padding:15px 18px;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:none;
+    transition:transform .08s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  button:active, a.btn:active{
+    transform:scale(0.98);
+  }
+  .btn-primary{
+    background:var(--primary);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(15,122,140,0.35);
+  }
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-accent{
+    background:var(--accent);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(255,138,92,0.35);
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--muted);
+    font-weight:500;
+    font-size:0.85rem;
+    box-shadow:none;
+    padding:10px;
+    margin-top:12px;
+  }
+  .btn-ghost:hover{color:var(--primary-dark);}
+  .sr-note{
+    margin-top:16px;
+    font-size:0.8rem;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+  .hidden{display:none !important;}
+  .dice{
+    font-size:2.2rem;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  footer{
+    text-align:center;
+    margin-top:18px;
+    font-size:0.75rem;
+    color:var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="tooth">🦷</div>
+    <h1>Simulador SOS Dente</h1>
+    <p>Teste de usabilidade do aplicativo</p>
+  </div>
+
+  <div class="card">
+
+    <!-- STEP 1: SORTEAR -->
+    <div id="step-idle">
+      <span class="step-badge">Passo 1 de 3</span>
+      <h2>Vamos começar!</h2>
+      <p class="desc">Clique no botão abaixo para sortear a situação de emergência odontológica que você vai simular usando o aplicativo.</p>
+      <div class="dice">🎲</div>
+      <button class="btn-primary" id="btn-sortear">Sortear cenário</button>
+    </div>
+
+    <!-- STEP 2: RESULTADO / IR PARA O APP -->
+    <div id="step-result" class="hidden">
+      <span class="step-badge">Passo 2 de 3</span>
+      <h2 id="scenario-title" class="scenario-title"></h2>
+      <div class="scenario-text" id="scenario-text"></div>
+      <p class="desc">Leia a situação com atenção e, em seguida, abra o aplicativo para simular o atendimento conforme o caso sorteado. Ele abrirá em uma nova aba — não feche esta página.</p>
+      <button class="btn-primary" id="btn-open-app">Abrir aplicativo SOS Dente</button>
+      <button class="btn-ghost" id="btn-manual-advance">Já terminei a simulação no app →</button>
+    </div>
+
+    <!-- STEP 3: FORMULARIO -->
+    <div id="step-form" class="hidden">
+      <span class="step-badge">Passo 3 de 3</span>
+      <h2>Quase lá!</h2>
+      <p class="desc">Agora, conte pra gente como foi sua experiência usando o aplicativo. Preencha o formulário de usabilidade — ele abrirá em uma nova aba.</p>
+      <button class="btn-accent" id="btn-open-form">Abrir formulário de usabilidade</button>
+      <button class="btn-ghost" id="btn-reset">Iniciar novo teste</button>
+    </div>
+
+  </div>
+
+  <p class="sr-note">Ao voltar para esta aba após usar o aplicativo, o próximo passo aparece automaticamente.</p>
+  <footer>Simulador de cenários &middot; SOS Dente</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var APP_URL = "https://sosdente.vercel.app/";
+  var FORM_URL = "https://forms.gle/1YrgzjnjU35EVf4S8";
+
+  var SCENARIOS = [
+    {
+      id: 1,
+      title: "Cenário 1 — Avulsão de dente permanente após atividade esportiva",
+      text: "\"Meu filho João, de 10 anos, estava jogando futebol na escola durante a aula de educação física. Em uma disputa pela bola, ele caiu para frente e bateu a boca no chão. Quando fui buscá-lo, percebi que um dos dentes da frente havia saído completamente da boca. O dente foi encontrado no gramado e está em minhas mãos. João está assustado, mas consciente e sem outros ferimentos aparentes. Não sei o que fazer nem qual a melhor forma de transportar o dente até o atendimento.\""
+    },
+    {
+      id: 2,
+      title: "Cenário 2 — Fratura coronária decorrente de acidente em ambiente escolar",
+      text: "\"Minha filha Mariana, de 8 anos, estava correndo no recreio da escola quando tropeçou e bateu a boca em um banco de concreto. A professora me ligou informando que um dos dentes da frente quebrou após a queda. Quando cheguei à escola, observei que uma parte do dente havia se soltado e que Mariana sentia desconforto ao falar e ao encostar os dentes. O pedaço do dente foi encontrado pelos funcionários da escola.\""
+    },
+    {
+      id: 3,
+      title: "Cenário 3 — Traumatismo em dente decíduo após queda durante brincadeira",
+      text: "\"Meu filho Lucas, de 3 anos, estava brincando no parque quando escorregou e caiu com o rosto no chão. Após a queda, percebi que um dos dentinhos da frente parecia estar torto e mais para dentro da gengiva do que o normal. Ele chorou bastante no momento do acidente, mas agora está mais calmo. Estou preocupada porque ainda são dentes de leite e não sei se devo procurar atendimento imediatamente.\""
+    },
+    {
+      id: 4,
+      title: "Cenário 4 — Sangramento gengival associado a impacto na região bucal",
+      text: "\"Minha filha Sofia, de 6 anos, estava andando de bicicleta no quintal de casa quando perdeu o equilíbrio e bateu a boca no guidão. Os dentes parecem estar inteiros, mas a gengiva começou a sangrar logo após o acidente. O sangramento diminuiu depois de alguns minutos, porém a região continua inchada e sensível ao toque. Gostaria de saber quais cuidados devo tomar e se há necessidade de procurar atendimento odontológico.\""
+    }
+  ];
+
+  var LS_BAG = "sosdente_bag_v1";
+  var LS_LAST = "sosdente_last_v1";
+  var SS_STEP = "sosdente_step";
+  var SS_SCENARIO = "sosdente_scenario_id";
+  var SS_APP_OPENED = "sosdente_app_opened";
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  // Shuffle-bag: refills with one of each id, reshuffles if the first
+  // card would repeat the previously drawn one, so scenarios stay balanced
+  // and never repeat back-to-back across refills.
+  function drawScenarioId(){
+    var bagRaw = localStorage.getItem(LS_BAG);
+    var bag = bagRaw ? JSON.parse(bagRaw) : [];
+    var last = localStorage.getItem(LS_LAST);
+
+    if(bag.length === 0){
+      var ids = SCENARIOS.map(function(s){ return s.id; });
+      var attempts = 0;
+      do {
+        bag = shuffle(ids);
+        attempts++;
+      } while (last && bag[bag.length - 1] === parseInt(last, 10) && attempts < 10);
+    }
+
+    var drawn = bag.pop();
+    localStorage.setItem(LS_BAG, JSON.stringify(bag));
+    localStorage.setItem(LS_LAST, String(drawn));
+    return drawn;
+  }
+
+  function getScenario(id){
+    for(var i = 0; i < SCENARIOS.length; i++){
+      if(SCENARIOS[i].id === id) return SCENARIOS[i];
+    }
+    return null;
+  }
+
+  var elIdle = document.getElementById("step-idle");
+  var elResult = document.getElementById("step-result");
+  var elForm = document.getElementById("step-form");
+
+  function showStep(step){
+    elIdle.classList.toggle("hidden", step !== "idle");
+    elResult.classList.toggle("hidden", step !== "result");
+    elForm.classList.toggle("hidden", step !== "form");
+    sessionStorage.setItem(SS_STEP, step);
+  }
+
+  function renderResult(){
+    var id = parseInt(sessionStorage.getItem(SS_SCENARIO), 10);
+    var scenario = getScenario(id);
+    if(!scenario){ showStep("idle"); return; }
+    document.getElementById("scenario-title").textContent = scenario.title;
+    document.getElementById("scenario-text").textContent = scenario.text;
+  }
+
+  document.getElementById("btn-sortear").addEventListener("click", function(){
+    var id = drawScenarioId();
+    sessionStorage.setItem(SS_SCENARIO, String(id));
+    sessionStorage.setItem(SS_APP_OPENED, "false");
+    renderResult();
+    showStep("result");
+  });
+
+  document.getElementById("btn-open-app").addEventListener("click", function(){
+    sessionStorage.setItem(SS_APP_OPENED, "true");
+    window.open(APP_URL, "_blank", "noopener");
+  });
+
+  document.getElementById("btn-manual-advance").addEventListener("click", function(){
+    showStep("form");
+  });
+
+  document.getElementById("btn-open-form").addEventListener("click", function(){
+    window.open(FORM_URL, "_blank", "noopener");
+  });
+
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    sessionStorage.removeItem(SS_SCENARIO);
+    sessionStorage.removeItem(SS_APP_OPENED);
+    showStep("idle");
+  });
+
+  // Auto-advance to the form step when the user comes back to this tab
+  // after having opened the app in a new one.
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "visible"){
+      var currentStep = sessionStorage.getItem(SS_STEP);
+      var appOpened = sessionStorage.getItem(SS_APP_OPENED) === "true";
+      if(currentStep === "result" && appOpened){
+        showStep("form");
+      }
+    }
+  });
+
+  // Restore state on load (e.g. accidental refresh mid-test).
+  (function init(){
+    var savedStep = sessionStorage.getItem(SS_STEP) || "idle";
+    if(savedStep === "result"){
+      renderResult();
+    }
+    showStep(savedStep);
+  })();
+
+})();
+</script>
+
+</body>
+</html>
