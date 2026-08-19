@@ -1,21 +1,24 @@
 // Serverless function: picks one of the 4 scenario ids using weighted
 // randomness that favors whichever scenario has been drawn least so far,
-// counted in a shared Upstash Redis store across every device that hits
-// this endpoint. Falls back to plain 25/25/25/25 randomness if the store
-// isn't linked yet or is unreachable, so the draw never breaks.
-//
-// Supports both env var namings Vercel's storage integrations may inject:
-// KV_REST_API_URL/TOKEN (legacy Vercel KV) and UPSTASH_REDIS_REST_URL/TOKEN
-// (Upstash Marketplace integration).
+// counted in a shared Redis store across every device that hits this
+// endpoint. Falls back to plain 25/25/25/25 randomness if the store isn't
+// linked yet or is unreachable, so the draw never breaks.
 
 let redis = null;
-const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const REDIS_URL =
+  process.env.KV_REDIS_URL ||
+  process.env.REDIS_URL ||
+  process.env.KV_URL;
 
-if (REDIS_URL && REDIS_TOKEN) {
+if (REDIS_URL) {
   try {
-    const { Redis } = require("@upstash/redis");
-    redis = new Redis({ url: REDIS_URL, token: REDIS_TOKEN });
+    const IORedis = require("ioredis");
+    redis = new IORedis(REDIS_URL, {
+      lazyConnect: true,
+      maxRetriesPerRequest: 1,
+      connectTimeout: 3000,
+    });
+    redis.on("error", () => {});
   } catch (err) {
     redis = null;
   }
