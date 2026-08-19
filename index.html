@@ -229,42 +229,29 @@
     }
   ];
 
-  var LS_BAG = "sosdente_bag_v1";
-  var LS_LAST = "sosdente_last_v1";
   var SS_STEP = "sosdente_step";
   var SS_SCENARIO = "sosdente_scenario_id";
   var SS_APP_OPENED = "sosdente_app_opened";
 
-  function shuffle(arr){
-    var a = arr.slice();
-    for(var i = a.length - 1; i > 0; i--){
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
-    }
-    return a;
-  }
-
-  // Shuffle-bag: refills with one of each id, reshuffles if the first
-  // card would repeat the previously drawn one, so scenarios stay balanced
-  // and never repeat back-to-back across refills.
+  // Asks the shared /api/draw endpoint for a scenario id, weighted toward
+  // whichever scenario has been drawn least across every device so far
+  // (tracked in Vercel KV). If the endpoint is unavailable (e.g. running
+  // locally without KV, or a network hiccup), falls back to a plain local
+  // random pick so the draw never breaks.
   function drawScenarioId(){
-    var bagRaw = localStorage.getItem(LS_BAG);
-    var bag = bagRaw ? JSON.parse(bagRaw) : [];
-    var last = localStorage.getItem(LS_LAST);
-
-    if(bag.length === 0){
-      var ids = SCENARIOS.map(function(s){ return s.id; });
-      var attempts = 0;
-      do {
-        bag = shuffle(ids);
-        attempts++;
-      } while (last && bag[bag.length - 1] === parseInt(last, 10) && attempts < 10);
-    }
-
-    var drawn = bag.pop();
-    localStorage.setItem(LS_BAG, JSON.stringify(bag));
-    localStorage.setItem(LS_LAST, String(drawn));
-    return drawn;
+    return fetch("/api/draw", { method: "POST" })
+      .then(function(resp){
+        if(!resp.ok) throw new Error("bad status " + resp.status);
+        return resp.json();
+      })
+      .then(function(data){
+        if(!data || !data.id) throw new Error("bad payload");
+        return data.id;
+      })
+      .catch(function(err){
+        console.warn("Sorteio balanceado indisponível, usando aleatório local.", err);
+        return Math.floor(Math.random() * SCENARIOS.length) + 1;
+      });
   }
 
   function getScenario(id){
@@ -294,11 +281,19 @@
   }
 
   document.getElementById("btn-sortear").addEventListener("click", function(){
-    var id = drawScenarioId();
-    sessionStorage.setItem(SS_SCENARIO, String(id));
-    sessionStorage.setItem(SS_APP_OPENED, "false");
-    renderResult();
-    showStep("result");
+    var btn = this;
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Sorteando...";
+    drawScenarioId().then(function(id){
+      sessionStorage.setItem(SS_SCENARIO, String(id));
+      sessionStorage.setItem(SS_APP_OPENED, "false");
+      renderResult();
+      showStep("result");
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = originalText;
+    });
   });
 
   document.getElementById("btn-open-app").addEventListener("click", function(){

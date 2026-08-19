@@ -1,48 +1,52 @@
 # Simulador SOS Dente
 
-Página única (`index.html`, sem build) para conduzir o teste de usabilidade:
+Página única (`index.html`) + uma função serverless (`api/draw.js`) para conduzir o
+teste de usabilidade:
 
-1. O participante clica em **Sortear cenário** e recebe um dos 4 cenários do PDF, escolhido
-   de forma balanceada (algoritmo de "baralho embaralhado" salvo no `localStorage` do
-   navegador: cada bloco de 4 sorteios contém exatamente 1 de cada cenário, sem repetir o
-   mesmo cenário duas vezes seguidas entre blocos).
+1. O participante clica em **Sortear cenário**. O front-end chama `POST /api/draw`, que
+   escolhe um dos 4 cenários do PDF com sorteio ponderado: cada cenário tem peso
+   `1 / (vezes_já_sorteado + 1)`, então quanto menos um cenário apareceu até agora, maior a
+   chance dele sair — mas a escolha continua sendo por sorte (`Math.random`), nunca
+   determinística. A contagem fica em um banco Redis compartilhado (Upstash, via Vercel),
+   então funciona mesmo com cada participante acessando de um aparelho/local diferente.
+   Se o banco não estiver configurado ou ficar fora do ar, a função cai automaticamente
+   para um sorteio 25/25/25/25 puro — o app nunca trava por causa disso.
 2. Ele abre o app (`https://sosdente.vercel.app/`) em uma nova aba e simula o atendimento
    conforme o cenário sorteado.
 3. Ao voltar para a aba do sorteio (evento `visibilitychange`), a página avança
    automaticamente para o passo 3 e oferece o link do formulário de usabilidade
    (`https://forms.gle/1YrgzjnjU35EVf4S8`). Há também um botão manual ("Já terminei a
    simulação no app →") caso o navegador do participante não dispare o evento.
-4. Um botão "Iniciar novo teste" reseta a sessão para o próximo participante, mantendo o
-   histórico do sorteio balanceado (guardado no `localStorage`, não na sessão).
+4. Um botão "Iniciar novo teste" reseta a sessão local para o próximo participante — a
+   contagem de sorteios continua no Redis, compartilhada entre todos.
 
-**Importante:** a distribuição balanceada dos cenários só funciona corretamente se todos os
-testes forem feitos no mesmo navegador/computador (ex.: um tablet/notebook usado pelo
-pesquisador com cada participante). Se cada pessoa usar seu próprio celular, o
-`localStorage` não é compartilhado entre eles e cada sessão começa um baralho novo.
+## Deploy gratuito (Vercel)
 
-## Deploy gratuito
+Como agora existe uma função serverless (`api/draw.js`), **precisa ser Vercel** — GitHub
+Pages não roda funções. O deploy em si continua gratuito no plano Hobby.
 
-### Opção A — GitHub Pages
+1. Suba o repositório para o GitHub (já feito) e importe-o em https://vercel.com/new — não
+   é necessário configurar build command, output directory nem variáveis de ambiente nesse
+   momento (pode ignorar/apagar a seção "Environment Variables" na tela de import).
+2. Depois do primeiro deploy, crie o banco compartilhado:
+   - No projeto, aba **Storage** → **Create Database** → escolha **Redis** (integração
+     Upstash, tem camada gratuita).
+   - Na tela de conexão, marque o próprio projeto (`simulador-sos-dente`) para vincular —
+     isso injeta as variáveis de ambiente automaticamente (`KV_REST_API_URL` /
+     `KV_REST_API_TOKEN` ou `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`,
+     dependendo da versão da integração — `api/draw.js` reconhece ambos os formatos).
+3. Vá em **Deployments** e clique em **Redeploy** no último deploy (as env vars novas só
+   valem a partir do próximo build).
+
+Sem o passo 2–3, o site funciona normalmente, só que o sorteio vira aleatório puro
+(sem memória entre participantes) em vez de ponderado/balanceado.
+
+### Testar localmente
 
 ```bash
-git init
-git add index.html README.md
-git commit -m "Simulador SOS Dente"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/simulador-sosdente.git
-git push -u origin main
+npm install
+npx vercel dev
 ```
 
-Depois, no GitHub: **Settings → Pages → Deploy from a branch → main / (root)**.
-O site fica em `https://SEU_USUARIO.github.io/simulador-sosdente/`.
-
-### Opção B — Vercel
-
-```bash
-npm i -g vercel
-vercel
-```
-
-Siga o assistente (ele detecta um site estático automaticamente). Ou, sem CLI: suba o
-repositório para o GitHub e importe-o em https://vercel.com/new — não é necessário
-configurar build command nem output directory.
+Sem o Redis configurado localmente, `/api/draw` cai no modo aleatório puro automaticamente
+(não precisa de `.env` para rodar em desenvolvimento).
