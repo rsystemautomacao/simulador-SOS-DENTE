@@ -133,6 +133,16 @@
     margin-top:12px;
   }
   .btn-ghost:hover{color:var(--primary-dark);}
+  .btn-outline{
+    background:#fff;
+    color:var(--primary-dark);
+    font-weight:600;
+    font-size:0.95rem;
+    box-shadow:none;
+    border:2px solid var(--primary);
+    margin-top:12px;
+  }
+  .btn-outline:hover{background:var(--bg);}
   .sr-note{
     margin-top:16px;
     font-size:0.8rem;
@@ -195,7 +205,7 @@
       <div class="app-hint">No app, na pergunta "Qual tipo de trauma ocorreu?", escolha: <strong id="scenario-app-option"></strong></div>
       <p class="desc">Leia a situação com atenção e, em seguida, abra o aplicativo para simular o atendimento conforme o caso sorteado. Ele abrirá em uma nova aba — não feche esta página. Pode voltar aqui pra reler o cenário quantas vezes precisar; só avance quando terminar.</p>
       <button class="btn-primary" id="btn-open-app">Abrir aplicativo SOS Dente</button>
-      <button class="btn-ghost" id="btn-manual-advance">Já terminei a simulação no app →</button>
+      <button class="btn-outline" id="btn-manual-advance">Já terminei a simulação no app →</button>
     </div>
 
     <!-- STEP 3: FORMULARIO -->
